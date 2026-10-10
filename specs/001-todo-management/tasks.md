@@ -65,7 +65,7 @@
 
 ### Implementation for User Story 1
 
-- [ ] T015 [US1] 完善 `frontend/src/stores/todoStore.ts`：state `{todos, filter: 'active'|'completed'|'all'（默认 'active'）, loading, error}`；actions `fetchTodos(status?)`、`createTodo`；getters `visibleTodos`（active/completed 直接用后端过滤结果；all 用本地 completed 字段切两区块）、`isEmpty`
+- [ ] T015 [US1] 完善 `frontend/src/stores/todoStore.ts`：state `{todos, filter: 'active'|'completed'|'all'（默认 'active'）, loading, error}`（loading/error 语义即 FR-012）；actions `fetchTodos(status?)`、`createTodo`；getters `visibleTodos`（active/completed 直接用后端过滤结果；all 用本地 completed 字段切两区块）、`isEmpty`
 - [ ] T016 [P] [US1] 实现 `frontend/src/components/TodoForm.vue`：标题（必填）+ 描述 + 截止日期输入；本地校验镜像约束（≤200/≤2000）；提交调 store.createTodo，成功后刷新列表
 - [ ] T017 [P] [US1] 实现 `frontend/src/components/StatusTabs.vue`：三分类切换按钮，当前分类高亮可视指示；切换仅改 store.filter 不重复请求（all 一次拉全量）
 - [ ] T018 [US1] 实现 `frontend/src/components/TodoList.vue`：按 visibleTodos 渲染——all 视图两个带标题区块（未完成在上、已完成在下）；列表空时渲染空状态引导（无事项→提示创建第一条；「已完成」为空→提示暂无该类事项，FR-011）
@@ -85,7 +85,8 @@
 
 - [ ] T020 [P] [US2] 后端端点测试（扩展 `backend/src/test/java/com/example/todo/api/TodoControllerTest.java`）：PATCH `/todos/{id}/complete` 返回 200 且 completed=true、重复调用幂等 200；DELETE `/todos/{id}` 返回 204、重复删除同一 id 返回 404 `{code:"NOT_FOUND"}`（契约 §complete/§delete）
 - [ ] T021 [P] [US2] 前端测试：`frontend/src/__tests__/TodoItem.spec.ts` + store 扩展用例 — 点击完成调 completeTodo 并从 active 视图移除；删除先弹确认，取消不发请求，确认后调 deleteTodo 并更新列表（US2-AC2/AC3）
-- [ ] T022 [US2] 运行 T020–T021 确认 RED
+- [ ] T021a [US2] 错误态回补测试（FR-012，先写先红）：扩展 `frontend/src/__tests__/todoStore.spec.ts` + 新增 `frontend/src/__tests__/ErrorBanner.spec.ts`（Vitest，mock fetch reject）— store：请求失败后 `error` 非空且 `loading` 复位、`fetchTodos` 进行中 `loading=true`（重复调用合并请求不触发第二次 fetch）；UI：error 非空时 App 渲染错误提示且禁用 `TodoForm` 提交（`disabled` 属性可查询），error 清空后恢复（依赖 T015/T019 已就绪的 store 骨架与 App 装配；消解 analyze 发现 U1 / full.md CHK001/CHK018）
+- [ ] T022 [US2] 运行 T020–T021a 确认 RED
 
 ### Implementation for User Story 2
 
@@ -106,7 +107,8 @@
 ### Tests for User Story 3 ⚠️
 
 - [ ] T026 [P] [US3] 后端单测：`backend/src/test/java/com/example/todo/service/TodoOverdueTest.java` — 固定 Clock：昨天+未完成 → overdue=true；昨天+已完成 → false；今天截止 → false；无截止日期 → false（FR-010）
-- [ ] T027 [US3] 运行 T026 确认 RED（若 T007 已实现规则则直接 GREEN，跳至实现）
+- [ ] T026a [P] [US3] 前端组件测试：`frontend/src/__tests__/TodoItemOverdue.spec.ts`（Vitest + @vue/test-utils）— 挂载 TodoItem：`overdue: true` 的事渲染"已逾期"徽标元素且可查询；`overdue: false`（含已完成、无截止日期）不渲染徽标（US3-AC1/AC2, FR-010；消解 analyze 发现 C1）
+- [ ] T027 [US3] 运行 T026 与 T026a 确认 RED（若 T007 已实现规则则 T026 可直接 GREEN，T026a 须待 T028 实现后 GREEN；跳至实现时记录原因）
 
 ### Implementation for User Story 3
 
@@ -118,9 +120,9 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T029 [P] 错误态全局呈现：`frontend/src/App.vue` 增加 store.error 可见提示（API 失败不白屏，提交入口禁用）——对应 custom checklist CHK018 的需求缺项回补
+- [ ] T029 [P] FR-012 实现收尾：`frontend/src/App.vue` 错误横幅与重试入口 + `TodoForm.vue` 提交禁用（error 期间），使 T021a 转 GREEN；T015/T021a 已建立 loading/error 状态与测试基线，本任务为其回补实现
 - [ ] T030 [P] 运行完整门禁：`cd backend && mvn test`、`cd frontend && npm test && npx vue-tsc --noEmit`（宪法 I/III 合入门禁）
-- [ ] T031 按 `specs/001-todo-management/quickstart.md` §4 十步走查全量验收（SC-001~SC-006），记录结果
+- [ ] T031 按 `specs/001-todo-management/quickstart.md` §4 十一步走查全量验收（SC-001~SC-006, FR-012），记录结果
 - [ ] T032 [P] 更新根 `README.md`：本地版本要求（JDK 25 / Maven 3.9.x / Spring Boot 3.5.16 / Node）、双终端运行与测试命令（宪法 V）
 - [ ] T033 复核 `specs/001-todo-management/checklists/full.md` 高影响项（CHK006 a11y、CHK014/015 契约口径、CHK018 失败态）：属评审人职责，仅记录不代勾选
 
@@ -137,7 +139,7 @@
 
 - **US1 (P1)**: 仅依赖 Phase 2 — 独立可交付 MVP
 - **US2 (P2)**: 依赖 Phase 2；集成点为 US1 的 TodoList（T025 挂载）
-- **US3 (P3)**: 依赖 Phase 2（T007 的 overdue 逻辑）；集成点为 US2 的 TodoItem（T028）
+- **US3 (P3)**: 依赖 Phase 2（T007 的 overdue 逻辑）；集成点为 US2 的 TodoItem（T028）；T026a 组件测试须待 T025（TodoItem.vue 存在）后方可运行至 GREEN
 
 ### Within Each User Story
 
@@ -149,7 +151,7 @@
 - Setup：T003 ∥ T002（T001 先行）
 - Foundational：T005/T006/T009 ∥（T004→T007→T008 串行）
 - US1 测试：T010–T013 四项全并行；US1 实现：T016 ∥ T017
-- US2 测试：T020 ∥ T021；Polish：T029 ∥ T032
+- US2 测试：T020 ∥ T021；US3 测试：T026 ∥ T026a；Polish：T029 ∥ T032
 
 ## Parallel Example: User Story 1
 

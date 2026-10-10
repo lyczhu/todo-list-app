@@ -8,7 +8,8 @@
 
 实现单用户待办事项管理：创建（标题必填、描述/截止日期可选）、按「未完成/已完成/全部」分类
 查看（默认未完成；全部视图分区展示，各区块按截止日期升序、无日期垫底、同日按创建时间稳定
-排序）、标记完成、删除（带确认）、逾期标识、空状态与持久化。采用用户指定技术栈：Vue3 +
+排序）、标记完成、删除（带确认）、逾期标识、空状态、加载/错误反馈（FR-012）与持久化。采用
+用户指定技术栈：Vue3 +
 TypeScript 前端（Pinia 状态管理），Java（JDK 25）后端提供 RESTful API，SQLite 存储。
 
 ## Technical Context
@@ -35,7 +36,7 @@ xerial sqlite-jdbc、hibernate-community-dialects（SQLiteDialect）；前端 vu
 **Constraints**: 无账号体系、无并发多用户（spec 假设）；开发期前端经 Vite dev proxy 访问后端
 API；生产可静态托管前端 + 独立后端
 
-**Scale/Scope**: 1 个实体（Todo）、5 个 REST 端点、约 6 个前端组件 + 1 个 Pinia store
+**Scale/Scope**: 1 个实体（Todo）、4 个 REST 端点、约 6 个前端组件 + 1 个 Pinia store
 
 ## Constitution Check
 
@@ -110,4 +111,4 @@ frontend/                             # Vite + Vue 3 + TypeScript
 ## Post-design Constitution Re-check
 
 Phase 1 产物（data-model.md、contracts/todo-api.yaml、quickstart.md）未引入新依赖、新端点
-之外的复杂度或 JS 组件；5 端点/1 实体与「全部」分区渲染均在原则 IV 范围内。**复核结论：PASS。**
+之外的复杂度或 JS 组件；4 端点/1 实体与「全部」分区渲染均在原则 IV 范围内。**复核结论：PASS。**
