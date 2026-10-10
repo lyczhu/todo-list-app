@@ -1,0 +1,103 @@
+# ============================================================
+# Java / Spring Boot / Maven (backend/)
+# ============================================================
+target/
+*.class
+*.jar
+*.war
+*.ear
+# 注意: 不要忽略 Maven Wrapper 自带的 jar
+!**/maven-wrapper.jar
+!**/maven-wrapper.properties
+
+# 构建/测试结果
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+bin/
+!**/src/main/**/bin/
+!**/src/test/**/bin/
+*.log
+
+# ============================================================
+# SQLite 数据 (backend/data/)
+# ============================================================
+backend/data/
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+*.db-shm
+*.db-wal
+
+# ============================================================
+# Node / Vite / Vue (frontend/)
+# ============================================================
+node_modules/
+dist/
+dist-ssr/
+.vite/
+*.local
+coverage/
+.nyc_output/
+
+# npm / yarn / pnpm 锁文件之外的缓存
+.eslintcache
+.stylelintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ============================================================
+# 环境变量与密钥
+# ============================================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ============================================================
+# IDE / 编辑器
+# ============================================================
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+.factorypath
+*.swp
+*.swo
+*~
+
+# ============================================================
+# 操作系统
+# ============================================================
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+.Trash-*
+.nfs*
+
+# ============================================================
+# 其他
+# ============================================================
+*.tmp
+*.bak
+
+# Qoder
+.qoder/
