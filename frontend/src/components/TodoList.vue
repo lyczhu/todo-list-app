@@ -11,7 +11,7 @@ const store = useTodoStore();
 
     <template v-else-if="store.filter === 'all'">
       <div v-if="store.todos.length === 0" class="state-hint" data-testid="empty-all">
-        还没有任何待办事项，先创建第一条吧。
+        还没有任何待办事项，点击「+」创建第一条吧。
       </div>
       <template v-else>
         <div class="group">
@@ -34,7 +34,7 @@ const store = useTodoStore();
     <template v-else>
       <div v-if="store.isEmpty" class="state-hint" :data-testid="`empty-${store.filter}`">
         <template v-if="store.filter === 'completed'">暂无已完成事项。</template>
-        <template v-else>没有未完成事项。创建第一条待办吧。</template>
+        <template v-else>没有未完成事项。点击「+」创建第一条待办吧。</template>
       </div>
       <ul v-else>
         <TodoItem v-for="t in store.visibleTodos" :key="t.id" :todo="t" :disabled="!!store.error" />

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushPromises, mount } from '@vue/test-utils';
-import { createPinia, setActivePinia } from 'pinia';
+import { createPinia } from 'pinia';
+import { createMemoryHistory, createRouter } from 'vue-router';
+import type { Router } from 'vue-router';
 import type { Todo } from '../api/types';
 
 vi.mock('../api/client', () => ({
@@ -11,6 +13,7 @@ vi.mock('../api/client', () => ({
 }));
 
 import { listTodos } from '../api/client';
+import { routes } from '../router';
 import { useTodoStore } from '../stores/todoStore';
 import App from '../App.vue';
 
@@ -26,31 +29,39 @@ function makeTodo(id: number): Todo {
   };
 }
 
+async function makeHomeRouter(): Promise<Router> {
+  const router = createRouter({ history: createMemoryHistory(), routes });
+  await router.push('/');
+  await router.isReady();
+  return router;
+}
+
 describe('错误态（FR-012）', () => {
   beforeEach(() => {
     vi.mocked(listTodos).mockReset();
   });
 
-  it('请求失败时显示错误提示并禁用提交入口', async () => {
+  it('请求失败时显示错误提示（提交入口禁用见 TodoCreateView.spec）', async () => {
+    const pinia = createPinia();
     vi.mocked(listTodos).mockRejectedValue(new Error('后端不可用'));
-    const wrapper = mount(App, { global: { plugins: [createPinia()] } });
+    const router = await makeHomeRouter();
+    const wrapper = mount(App, { global: { plugins: [pinia, router] } });
     await flushPromises();
 
     expect(wrapper.find('[data-testid="error-banner"]').exists()).toBe(true);
     expect(wrapper.text()).toContain('后端不可用');
-    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeDefined();
   });
 
   it('错误态下事项卡片的完成/删除入口同样被禁用（FR-012）', async () => {
     const pinia = createPinia();
-    setActivePinia(pinia);
+    const router = await makeHomeRouter();
     vi.mocked(listTodos).mockResolvedValueOnce([makeTodo(1)]);
-    const wrapper = mount(App, { global: { plugins: [pinia] } });
+    const wrapper = mount(App, { global: { plugins: [pinia, router] } });
     await flushPromises();
     expect(wrapper.find('[data-testid="complete-button"]').exists()).toBe(true);
 
     vi.mocked(listTodos).mockRejectedValueOnce(new Error('后端不可用'));
-    const store = useTodoStore();
+    const store = useTodoStore(pinia);
     await store.fetchTodos();
     await flushPromises();
 
@@ -62,9 +73,11 @@ describe('错误态（FR-012）', () => {
     ).toBeDefined();
   });
 
-  it('点击重试成功后错误横幅消失、提交恢复', async () => {
+  it('点击重试成功后错误横幅消失', async () => {
+    const pinia = createPinia();
     vi.mocked(listTodos).mockRejectedValueOnce(new Error('后端不可用'));
-    const wrapper = mount(App, { global: { plugins: [createPinia()] } });
+    const router = await makeHomeRouter();
+    const wrapper = mount(App, { global: { plugins: [pinia, router] } });
     await flushPromises();
 
     vi.mocked(listTodos).mockResolvedValue([makeTodo(1)]);
@@ -72,6 +85,5 @@ describe('错误态（FR-012）', () => {
     await flushPromises();
 
     expect(wrapper.find('[data-testid="error-banner"]').exists()).toBe(false);
-    expect(wrapper.find('button[type="submit"]').attributes('disabled')).toBeUndefined();
   });
 });

@@ -1,6 +1,6 @@
 # Phase 0 Research: 待办事项管理
 
-**Date**: 2026-10-10 | **Plan**: [plan.md](./plan.md)
+**Date**: 2026-10-10（2026-10-17 增补 R6 导航方案） | **Plan**: [plan.md](./plan.md)
 
 技术栈由用户指定（Vue3 + JDK 25 + RESTful API + Pinia + SQLite）。本研究解决"如何以最小
 复杂度落地该栈"的决策点。经用户确认：**后端框架采用 Spring Boot 3.5.16**，构建使用本地
@@ -62,6 +62,26 @@ Maven 3.9.x（实测 3.9.11）。
 - **Alternatives considered**: 全量 `@SpringBootTest`（慢，非必要）；Playwright E2E（超出
   本特性单测门槛，留作后续增强）。
 
+## R6. 新增页导航与未保存离开确认（FR-013/014/015，2026-10-17 澄清引入）
+
+- **Decision**: 引入 **vue-router 4**（Vue 官方路由），首页路由 `/`（HomeView：列表 + 分类 +
+  "+"入口），新增页路由 `/todos/new`（TodoCreateView）。保存成功后 `router.push('/')` 返回首页，
+  并将 store 当前分类重置为 `active`（「未完成」）以显示最新列表（FR-014 / Clarification 3）。
+  离开新增页且表单有未保存输入时，通过 `onBeforeRouteLeave` 守卫弹出确认提示，确认后丢弃输入
+  并返回、不保留草稿（FR-015 / Clarification 2）。"+"入口为首页内普通按钮（`AddButton.vue`），
+  位置/样式属视觉设计，留待实现阶段决定。
+- **Rationale**: 「独立页面」+「返回」语义需要浏览器历史栈支持（含系统/浏览器返回键），
+  vue-router 的导航守卫是处理"有未保存输入时拦截返回并确认"的标准做法，避免手写 popstate
+  监听带来的正确性风险；保存后切回「未完成」是需求明确行为，由 store 单一状态源承担。
+- **Alternatives considered**:
+  - 组件内 `v-if` 视图切换 + 不引入路由（更轻，但无法自然处理浏览器返回/历史，FR-015 的
+    返回确认需自行实现 history 拦截，复杂度反而上升且易出错）；
+  - 弹窗/抽屉承载新增表单（非"独立页面"，违背 Clarification 2026-10-17 的导航模型）；
+  - 服务端多页跳转（与 SPA + REST 架构不符，违背原则 IV）。
+- **依赖引入说明（宪法「技术栈约束」要求）**: vue-router 为 Vue 官方维护包、体积小、与
+  Vite/Vitest 生态无缝，用途仅为支撑新增的两视图导航，无额外运行时成本。
+
 ## 结论
 
-Technical Context 中无遗留 NEEDS CLARIFICATION，可进入 Phase 1 设计。
+Technical Context 无遗留 NEEDS CLARIFICATION；导航改造仅需引入 vue-router（R6），API 契约
+与数据模型不变，可进入/保持 Phase 1 设计。

@@ -60,3 +60,13 @@
   SQLiteDialect，research R2）。日期以 `YYYY-MM-DD` TEXT 存储（方言默认），`created_at`
   为 ISO-8601 TEXT。
 - 无软删除、无历史表（YAGNI，spec 数据保留假设：长期保留直至用户删除）。
+
+## 视图瞬时状态（前端，不持久化）
+
+导航改造（FR-013/014/015，Clarifications 2026-10-17）引入两个纯前端 ephemeral 状态，
+不入后端、不入库：
+
+| 状态 | 载体 | 规则 |
+|------|------|------|
+| `currentCategory` | Pinia store（`active`/`completed`/`all`，默认 `active`） | 首页分类切换；从新增页保存返回首页时 MUST 重置为 `active`（FR-014），确保新事项可见 |
+| 新增表单草稿 | `TodoCreateView` 组件本地状态（title/description/dueDate） | 仅存于组件实例；离开（放弃或保存）即丢弃，不跨页面/刷新保留（FR-015）；非空即视为"有未保存输入"，触发返回确认 |

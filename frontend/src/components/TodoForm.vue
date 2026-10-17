@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useTodoStore } from '../stores/todoStore';
 
 const props = defineProps<{ disabled?: boolean }>();
+const emit = defineEmits<{ created: []; 'dirty-change': [dirty: boolean] }>();
 
 const store = useTodoStore();
 const title = ref('');
@@ -10,6 +11,12 @@ const description = ref('');
 const dueDate = ref('');
 const formError = ref('');
 const submitting = ref(false);
+
+// FR-015/决策 C1：任一字段非空即视为有未保存输入
+const dirty = computed(
+  () => title.value !== '' || description.value !== '' || dueDate.value !== '',
+);
+watch(dirty, (value) => emit('dirty-change', value));
 
 async function onSubmit() {
   if (submitting.value || props.disabled) return;
@@ -37,6 +44,7 @@ async function onSubmit() {
     title.value = '';
     description.value = '';
     dueDate.value = '';
+    emit('created');
   } catch (e) {
     formError.value = e instanceof Error ? e.message : '创建失败';
   } finally {

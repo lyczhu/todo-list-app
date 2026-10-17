@@ -197,3 +197,52 @@ T013 frontend TodoForm.spec（必填校验/防重复提交）
 **Purpose**: /speckit-converge 评估追加项 — 代码现状与 spec/plan/tasks 的剩余差距（ID 延续 T038，不复用不改写既有任务）
 
 - [x] T039 为 `frontend/src/api/client.ts` 补充单元测试 `frontend/src/__tests__/client.spec.ts`：FR-012 的全局/内联错误路由完全依赖 `toApiError` 写入的 `ApiClientError.status`，但 `todoStore.spec.ts` 直接注入 `ApiClientError` 绕过了该映射，此接缝无覆盖。以 mock `fetch` 断言：5xx 响应 → `ApiClientError.status>=500`、404 → `status===404`、`fetch` 网络异常 → 非 `ApiClientError`（或 `status===0`），并校验 `{code,message}` 归一化与 204 无响应体处理；先写确认当前实现通过（若失败则修复 `client.ts`），复跑 `npx vitest run` + `npx vue-tsc --noEmit` per FR-012 / Constitution I (partial)
+
+---
+
+## Phase 10: 导航模型改造 — 独立新增页 (Priority: P1 · US1 补强) 🎯 未开工
+
+**Purpose**: 落实 Clarifications Session 2026-10-17 与新增需求 **FR-013/FR-014/FR-015**（归入
+用户故事 US1 创建流程，对应 AC1/AC2/AC7 与新增 Edge Case）。**纯前端改造**——后端与
+`contracts/todo-api.yaml` 不新增端点/字段（见 plan.md、research R6）。决策：引入 **vue-router 4**，
+`/`＝首页（列表+分类+“+”入口）、`/todos/new`＝独立新增页；保存成功返回首页并切「未完成」；
+未保存离开经 `onBeforeRouteLeave` 守卫确认。遵循宪法原则 I：测试先行、先红后绿。
+
+**Independent Test**: 首页点“+”进入新增页 → 填写保存 → 自动返回首页且切到「未完成」并见新事项；
+新增页有未保存输入时返回弹确认（继续→停留、放弃→返回不创建不存草稿）；空列表首页引导指向“+”。
+对应 quickstart §4 步骤 0/1/3/4/11。
+
+### Tests for Phase 10 ⚠️（先写测试，确认 RED 再实现）
+
+- [x] T040 [P] [US1] 路由解析测试 `frontend/src/__tests__/router.spec.ts`（Vitest）：`createRouter` 装配 `frontend/src/router/index.ts` 后，`/` 解析出 HomeView（渲染 StatusTabs+TodoList+AddButton 入口，无 TodoForm）、`/todos/new` 解析出 TodoCreateView（渲染 TodoForm）；断言首页加载即展示列表（FR-013, US1-AC5）
+- [x] T041 [P] [US1] “+”入口测试 `frontend/src/__tests__/AddButton.spec.ts`：挂载 AddButton，渲染可见“+”触发元素（`data-testid="add-button"`）；点击后调用 `router.push('/todos/new')`（mock router）。**断言「+」在 `store.error` 非空时仍可点击**（“+”为导航入口，FR-012 仅约束提交类入口，见决策 F1）
+- [x] T042 [P] [US1] 新增页保存返回测试 `frontend/src/__tests__/TodoCreateView.spec.ts`：有效提交时——`store.createTodo` 恰调用一次、成功后 `store.setFilter('active')` 被调用、`router.push('/')` 被调用；在「已完成」分类下进入并保存后，返回首页分类为 `active` 且新事项可见（FR-014 + Clarification 3；US1-AC1/AC2/AC7）。空/纯空白标题提交仍走 TodoForm 内联校验、不触发导航（复用 FR-002）。**并断言：`store.error` 非空时新增页 `button[type="submit"]` 处于 `disabled`、错误恢复后可用**（承接 FR-012 与决策 E1）
+- [x] T043 [P] [US1] 未保存离开守卫测试 `frontend/src/__tests__/TodoCreateViewGuard.spec.ts`：向表单写入未保存内容后触发离开（`onBeforeRouteLeave`）——有未保存输入时弹出确认：模拟“取消”则导航中止（停留、不调 createTodo）；模拟“确认放弃”则放行导航、**不创建事项、不保留草稿**；无未保存输入时离开不弹确认（FR-015 + Edge Case）
+- [x] T044 [US1] 运行 T040–T043 确认全部失败（RED，因 vue-router/视图/守卫尚未存在），记录失败输出
+
+### Implementation for Phase 10
+
+- [x] T045 [US1] 引入依赖：`frontend/package.json` dependencies 增加 `vue-router@^4`，执行 `npm install`（research R6 依赖引入说明：官方路由，无额外运行时成本）
+- [x] T046 [US1] 新建 `frontend/src/router/index.ts`：`createRouter` + `createWebHistory`，路由 `/`→`views/HomeView.vue`、`/todos/new`→`views/TodoCreateView.vue`，默认导出 router 实例
+- [x] T047 [US1] 装配路由：`frontend/src/main.ts` 中 `app.use(router)`（保留 pinia）
+- [x] T048 [US1] 拆分首页壳层：将 `frontend/src/App.vue` 改为「h1 + 全局错误横幅/重试 + `<router-view/>`」；新建 `frontend/src/views/HomeView.vue` 承载原 App 内的 `StatusTabs` + `TodoList`，并挂载 AddButton；`onMounted` 首次 `fetchTodos` 移入 HomeView。新增/拆分 SFC 一律 `<script setup lang="ts">`、禁 `any`、`npx vue-tsc --noEmit` 零错误（宪法 III，决策 D1）。**同步修复** `frontend/src/__tests__/ErrorBanner.spec.ts`：App 现渲染 `<router-view>`，改用带 `createMemoryHistory` 的测试 router 挂载；保留错误横幅与「事项卡片完成/删除入口禁用」断言（HomeView 路由下），并将「`button[type=submit]` 禁用」断言迁至 TodoCreateView（见 T042）——因 App 不再内联 `<TodoForm>`，原第 41/75 行断言若留在 App 层将空断言/失效（E1）
+- [x] T049 [P] [US1] 新建 `frontend/src/components/AddButton.vue`：“+”入口按钮（`data-testid="add-button"`），点击 `router.push('/todos/new')`；「+」为导航入口，**不随 `store.error` 禁用**（决策 F1，FR-012 仅约束提交类入口）；组件 `<script setup lang="ts">`（宪法 III，D1）
+- [x] T050 [US1] 新建 `frontend/src/views/TodoCreateView.vue`：承载 `TodoForm`（自 App 移入本页）并绑定 `:disabled="!!store.error"` 以保留 FR-012 的 error 态提交禁用（决策 E1）；维护本地 dirty 标记（决策 C1：title/description/dueDate **任一非空**即视为有未保存输入）；保存成功回调中依次 `await store.createTodo(...)` → `store.setFilter('active')` → 清除 dirty → `router.push('/')`（FR-014 + Clarification 3）；组件 `<script setup lang="ts">`（宪法 III，D1）
+- [x] T051 [US1] 在 `frontend/src/views/TodoCreateView.vue` 实现 `onBeforeRouteLeave` 守卫：dirty 为真时 `window.confirm('放弃未保存的待办事项？')`；返回 false/取消则中止导航（停留），确认放弃则放行、丢弃本地表单状态且**不创建、不保留草稿**；保存成功路径已清 dirty 故不误触发（FR-015 + Edge Case）
+- [x] T052 [P] [US1] 空状态文案对齐“+”：`frontend/src/components/TodoList.vue`/`views/HomeView.vue` 无事项时引导用户点击首页“+”创建第一条（FR-011 文案更新，措辞与 Clarification 一致）
+- [x] T053 [US1] 重跑 T040–T043 至 GREEN；`cd frontend && npx vue-tsc --noEmit` 零错误（宪法 III）
+
+**Checkpoint**: 双页导航独立可用；quickstart §4 步骤 0/1/3/4/11 通过；后端与契约零改动
+
+### Polish for Phase 10
+
+- [x] T054 [P] 运行前端全门禁：`cd frontend && npm test && npx vue-tsc --noEmit`；后端未改动，可选复跑 `cd backend && mvn test` 确认无回归（宪法 I 合入门禁）
+- [x] T055 真实浏览器按 `specs/001-todo-management/quickstart.md` §4 走查新增步骤 0/1/3/4/11（`mvn spring-boot:run` + `npm run dev` 双终端），验证：落地首页即见列表、“+”进入新增页、保存自动返回首页并切「未完成」、未保存返回确认、系统/浏览器返回键亦触发守卫；记录结果（SC-001 覆盖新流程）（2026-10-17 partial：后端+Vite 冒烟已过——深链 /todos/new 200、POST/DELETE 201/204 且数据还原；交互点击流未做，待真实浏览器人工复验）
+
+### Phase 10 依赖与并行
+
+- **顺序**：T040–T043（写测试）→ T044（确认 RED）→ T045→T046→T047（依赖/路由装配，串行）→ T048（App 拆分+修 ErrorBanner.spec）→ T049/T050/T052 → T051（同 TodoCreateView.vue，须接在 T050 之后）→ T053（GREEN+tsc）→ T054/T055
+- **同文件串行**：T050 → T051（均改 `TodoCreateView.vue`）
+- **[P] 并行机会**：测试 T040/T041/T042/T043 四项并行；实现期 AddButton（T049）∥ 空状态文案（T052，不同文件）；Polish T054 ∥ T055（T055 待 T053 完成）
+- **回归面**：T048 修改 App.vue 与 ErrorBanner.spec.ts 为唯一触及既有测试的改动；TodoForm.spec.ts / TodoItem*.spec.ts / client.spec.ts 不受影响（TodoForm 仍独立可挂载）
+- **交付策略**：MVP（T001–T039）已交付；本 Phase 为 2026-10-17 澄清的增量补丁，可独立实现、独立回归，不破坏 US2/US3 行为

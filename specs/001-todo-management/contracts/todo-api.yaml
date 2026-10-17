@@ -5,6 +5,10 @@ info:
     待办事项管理 RESTful 契约（001-todo-management）。服务端返回已按
     dueDate 升序、无 dueDate 垫底、同日按 createdAt 稳定排序的列表；
     overdue 由服务端日期判定。本特性无编辑、无重开完成状态。
+    职责划分：后端按此排序返回全量数据并携带 completed 字段，「全部」视图的
+    状态分区渲染由前端完成（对应 spec FR-005，此处“系统”含前端渲染层）。
+    幂等口径：complete 为幂等状态设置（已达目标态重复调用返回 200）；
+    delete 非幂等（资源删除后消失，重复删除同一 id 返回 404）——见各端点。
   version: 1.0.0
 servers:
   - url: http://localhost:8080/api
@@ -55,7 +59,7 @@ paths:
   /todos/{id}:
     delete:
       operationId: deleteTodo
-      summary: 删除待办事项（幂等语义：重复删除同一 id 返回 404）
+      summary: 删除待办事项（非幂等：资源删除后消失，重复删除同一 id 返回 404）
       parameters:
         - $ref: "#/components/parameters/IdPath"
       responses:
@@ -70,7 +74,7 @@ paths:
   /todos/{id}/complete:
     patch:
       operationId: completeTodo
-      summary: 标记为完成（单向；对已完成事项重复调用幂等返回 200）
+      summary: 标记为完成（单向；幂等状态设置——对已完成事项重复调用返回 200）
       parameters:
         - $ref: "#/components/parameters/IdPath"
       responses:

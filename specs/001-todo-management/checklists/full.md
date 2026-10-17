@@ -12,33 +12,33 @@
 
 - [x] CHK001 - 加载/请求进行中的状态需求是否在功能需求中缺失（仅 quickstart 提示提及）？ [Gap, FR §Requirements]
 - [x] CHK002 - 「未完成」「已完成」「全部」三个分类的切换交互需求是否均已定义（切换入口、当前分类的可视指示）？ [Completeness, Spec §FR-004]
-- [ ] CHK003 - 逾期事项"醒目方式"是否以可测的标准（颜色/图标/文案的最小集）定义，还是仅为举例性描述？ [Gap, Spec §FR-010]
-- [ ] CHK004 - 删除确认的呈现形式与可取消行为需求是否在 FR 层定义（当前仅存在于 US2 验收场景）？ [Completeness, Spec §US2-AC3]
+- [x] CHK003 - 逾期事项"醒目方式"是否以可测的标准（颜色/图标/文案的最小集）定义，还是仅为举例性描述？ [Gap, Spec §FR-010]
+- [x] CHK004 - 删除确认的呈现形式与可取消行为需求是否在 FR 层定义（当前仅存在于 US2 验收场景）？ [Completeness, Spec §US2-AC3]
 - [x] CHK005 - 各分类下的空状态文案需求是否分别定义（空列表 vs 空「已完成」分类）？ [Coverage, Spec §FR-011]
-- [ ] CHK006 - 可访问性需求（键盘操作、读屏语义）是否被有意排除还是遗漏？ [Gap]
+- [x] CHK006 - 可访问性需求（键盘操作、读屏语义）是否被有意排除还是遗漏？ [Gap]
 - [x] CHK007 - 列表规模上限（500 条）是否应作为显式需求写入 spec（目前仅 plan 性能目标）？ [Completeness, Spec §SC]
 
 ## Requirement Clarity（需求清晰度）
 
 - [x] CHK008 - 标题长度上限 200 字符的计数口径是否明确（去空白前/后、字符 vs 字节）？ [Ambiguity, Spec §Assumptions]
-- [ ] CHK009 - 「已完成区块」的排序规则是否被规格明文覆盖（当前由 data-model 从 FR-006 推广推导）？ [Clarity, Spec §FR-005/FR-006]
-- [ ] CHK010 - 逾期判定中"今天"的时区与日界定义是否明确（research 已定为服务端日期，spec 未回写）？ [Clarity, Spec §Assumptions]
+- [x] CHK009 - 「已完成区块」的排序规则是否被规格明文覆盖（当前由 data-model 从 FR-006 推广推导）？ [Clarity, Spec §FR-005/FR-006]
+- [x] CHK010 - 逾期判定中"今天"的时区与日界定义是否明确（research 已定为服务端日期，spec 未回写）？ [Clarity, Spec §Assumptions]
 - [x] CHK011 - 「全部」视图中两区块的先后次序是否唯一确定（未完成在上已明确，是否允许反转实现）？ [Clarity, Spec §FR-005]
 - [x] CHK012 - SC-003/SC-005 的"1 秒内反映"是否定义了测量起止点（操作完成→界面更新的可判定边界）？ [Measurability, Spec §SC-003]
 
 ## Requirement Consistency（需求一致性）
 
 - [x] CHK013 - spec 的排序表述（FR-004 旧语义→FR-006 现语义）与 data-model、契约描述三者是否完全一致（NULL 垫底、同日按 createdAt）？ [Consistency, Spec §FR-006 / data-model §排序规则 / contracts]
-- [ ] CHK014 - 契约将「全部」分区渲染职责交由前端，与 FR-005"系统 MUST 分区展示"的责任归属表述是否冲突？ [Conflict, contracts/todo-api.yaml §GET /todos]
+- [x] CHK014 - 契约将「全部」分区渲染职责交由前端，与 FR-005"系统 MUST 分区展示"的责任归属表述是否冲突？ [Conflict, contracts/todo-api.yaml §GET /todos]
 - [x] CHK015 - 契约声明"无重开完成状态"，spec 是否同步声明了该范围排除（目前仅隐含于 US/FR 未提重开）？ [Gap, contracts §info.description]
 - [x] CHK016 - US2 叙述"完成后从默认视图消失"与 US1-AC6 分区展示描述之间对"已完成事项可见性"的口径是否一致？ [Consistency, Spec §US1/US2]
-- [ ] CHK017 - 契约对重复 complete 返回 200 幂等，与删除重复返回 404 的幂等口径不一致，是否有需求依据区分两者？ [Consistency, contracts §complete/§delete]
+- [x] CHK017 - 契约对重复 complete 返回 200 幂等，与删除重复返回 404 的幂等口径不一致，是否有需求依据区分两者？ [Consistency, contracts §complete/§delete]
 
 ## Scenario & Edge Case Coverage（场景与边界覆盖）
 
 - [x] CHK018 - 异常类场景（后端不可用、请求失败后的用户可见需求）是否在 FR/SC 层缺失？ [Gap, Exception Flow]
 - [x] CHK019 - 并发提交重复创建（快速双击保存）的需求是否已定义判重口径（以一次保存一条为准的可测性）？ [Clarity, Spec §Edge Cases]
-- [ ] CHK020 - 标题重复是否允许（同名事项）——需求未声明唯一性规则，是否需要显式"允许重复"？ [Gap, Spec §Key Entities]
+- [x] CHK020 - 标题重复是否允许（同名事项）——需求未声明唯一性规则，是否需要显式"允许重复"？ [Gap, Spec §Key Entities]
 - [x] CHK021 - 同日期多条事项以 createdAt 稳定排序，创建时间精度导致的并列是否有次级规则？ [Edge Case, Spec §Edge Cases]
 
 ## Non-Functional & Governance（非功能与治理）
@@ -67,3 +67,9 @@
   处置（样式量化、确认形式、a11y 立场、时区口径、默认视图持久性）；CHK014/017→契约口径由
   评审人保留判断（不影响 tasks 执行：T008/T020 已按契约实现）；CHK020→建议在 spec 假设补
   "允许同名事项"一行（未强改）。
+- **评审处置（2026-10-17，评审人批准勾选）**：27/27。此前保留的 8 项经评审人要求 agent 协助
+  复评、逐项确认后消解：CHK003→FR-010 改写（「已逾期」文案徽标+可区分强调，不锁色值）；
+  CHK004→新增 FR-016（删除 MUST 可取消确认）；CHK006→Assumptions 记 a11y v1 out-of-scope；
+  CHK009→FR-006 明文「未完成」「已完成」每区块各自遵循、FR-005 引用；CHK010→Assumptions
+  记“今天＝服务端本地日期”；CHK014→FR-005 职责澄清句 + 契约 info；CHK017→契约 info 幂等
+  口径 + complete/delete summary 修正；CHK020→Assumptions 记允许重复标题（id 唯一键）。

@@ -1,15 +1,7 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
 import { useTodoStore } from './stores/todoStore';
-import TodoForm from './components/TodoForm.vue';
-import StatusTabs from './components/StatusTabs.vue';
-import TodoList from './components/TodoList.vue';
 
 const store = useTodoStore();
-
-onMounted(() => {
-  void store.fetchTodos();
-});
 </script>
 
 <template>
@@ -19,9 +11,7 @@ onMounted(() => {
       <span>{{ store.error }}</span>
       <button type="button" data-testid="retry-button" @click="store.fetchTodos()">重试</button>
     </div>
-    <TodoForm :disabled="!!store.error" />
-    <StatusTabs />
-    <TodoList />
+    <router-view />
   </main>
 </template>
 
